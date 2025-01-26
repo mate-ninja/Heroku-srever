@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js" integrity="sha512-Xm9qbB6Pu06k3PUwPj785dyTl6oHxgsv9nHp7ej7nCpAqGZT3OZpsELuCYX05DdonFpTlBpXMOxjavIAIUwr0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #chat {
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        #messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        #input {
+            display: flex;
+        }
+        #input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        #input button {
+            padding: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">WebSocket Chat</h1>
+    <div id="chat">
+        <div id="messages"></div>
+        <div id="input">
+            <input type="text" id="messageInput" placeholder="Type a message" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+
+        // Połączenie z serwerem WebSocket
+        function connectToChat() {
+            socket = io('ws://localhost:8080');  // Adres serwera WebSocket
+
+            socket.onopen = function() {
+                console.log('Connected to chat server');
+            };
+
+            socket.on("message", (data) => {
+                console.log('Received message:', data);  // Dodajmy logi, żeby sprawdzić, co odbieramy
+                const messages = document.getElementById('messages');
+                const newMessage = document.createElement('div');
+                newMessage.textContent = data;  // Wiadomość przychodząca
+                messages.appendChild(newMessage);
+                messages.scrollTop = messages.scrollHeight; // Ustawienie na dół
+            });
+
+            socket.onclose = function() {
+                console.log('Disconnected from chat server');
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket Error: ' + error);
+            };
+        }
+
+        // Wysyłanie wiadomości
+        function sendMessage() {
+            const inputField = document.getElementById('messageInput');
+            const message = inputField.value;
+
+            if (message) {
+                socket.emit('message', message);
+                inputField.value = ''; // Czyszczenie pola tekstowego
+            }
+            inputField.focus()
+        }
+
+        // Połączenie z serwerem WebSocket po załadowaniu strony
+        window.onload = connectToChat;
+    </script>
+</body>
+</html>
